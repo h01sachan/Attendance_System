@@ -1,9 +1,22 @@
 import cv2, time
 from mtcnn.mtcnn import MTCNN
 
+#MTCNN used as a detector
 detector = MTCNN(scale_factor=0.65,min_face_size=30)
 
+#this function accept the collection of faces and returns the coordinates of the face having largest area
+def get_largest_face(faces):
+    x,y,w,h=0,0,0,0
+    for face in faces:
+        x1,y1,w2,h2 = face["box"]
+        if w*h < w2*h2:
+            w,h=w2,h2
+            x,y=x1,y1
+    x2, y2 = x + w, y + h
+    return x,y,x2,y2
 
+
+#Function used to detect the faces and recoginize them
 def recognise():
     capture = cv2.VideoCapture(0)
     n=0
@@ -28,8 +41,11 @@ def recognise():
                    1, (0,255,0),2, cv2.LINE_AA)
             cv2.imshow("face recognition",img)
             continue
-        x1,y1,w2,h2 = faces["box"]
-        img = cv2.rectangle(img,(x1*4,y1*4),(w2*4,h2*4),(0,255,0),2)
+        # selecting largest of all faces only
+        x1,y1,x2,y2 = get_largest_face(faces)
+        #enclosing face in a rectangle
+        img = cv2.rectangle(img,(x1*4,y1*4),(x2*4,y2*4),(0,255,0),2)
         cv2.imshow("face recognition",img)
+        
     capture.release()
     cv2.destroyAllWindows()
