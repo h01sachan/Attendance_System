@@ -1,4 +1,4 @@
-import cv2, time , pickle
+import cv2, time , pickle, os
 from mtcnn.mtcnn import MTCNN
 from PIL import Image
 from numpy import asarray, degrees
@@ -22,6 +22,59 @@ def dataset():
         all_face_embeddings = pickle.load(f)
     return all_face_embeddings
 
+def extract_face(filename):
+
+    """
+    returns the face after extraction and
+    returned face is largest among all the extracted faces
+    """
+    pixels = pyplot.imread(filename)
+    faces = detector.detect_faces(pixels)
+    if len(faces)==0:
+        return False
+    x1,y1,x2,y2 = get_largest_face(faces)
+    face = pixels[y1:y2, x1:x2]
+    return face
+
+def save_from_folder(path):
+
+    """
+    saved faces details from the folder
+    """
+
+    files = os.listdir(path)
+    faces = [extract_face(path+'/'+file) for file in files]
+    embeddings = get_embedding(faces)
+    all_face_embeddings = {}
+    for i,emb in enumerate(embeddings):
+        all_face_embeddings[files[i][:-3]] = emb
+        with open('dataset_faces.dat', 'wb') as f:
+            pickle.dump(all_face_embeddings, f)
+
+def save_embedding(emb,name):
+
+    """
+    function for saving 
+    we used pickle to store it in a file
+    """
+    all_face_embeddings = dataset()
+    all_face_embeddings[name] = emb
+    with open('dataset_faces.dat', 'wb') as f:
+        pickle.dump(all_face_embeddings, f)
+    return 
+
+def save_from_file(filename,name):
+
+    face = extract_face(filename)
+    embedding = get_embedding([face])[0]
+    save_embedding(embedding,name) 
+
+def save_face(emb,name):
+    
+    """
+    function to save face
+    """
+    save_embedding(emb,name)
 
 def identify(known_embedding):
     """
