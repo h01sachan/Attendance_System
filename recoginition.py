@@ -1,7 +1,7 @@
 import cv2, time , pickle, os
 from mtcnn.mtcnn import MTCNN
 from PIL import Image
-from numpy import asarray, degrees
+from numpy import asarray, degrees, true_divide
 from keras_vggface.vggface import VGGFace
 from keras_vggface.utils import preprocess_input
 from matplotlib import pyplot
@@ -64,17 +64,17 @@ def save_embedding(emb,name):
     return 
 
 def save_from_file(filename,name):
-
+    """
+    saves the face embedding with name in dataset
+    parameters:
+        ->filename: name of file in which image of person is
+        ->name :  name of person
+    returns None
+    """
     face = extract_face(filename)
     embedding = get_embedding([face])[0]
     save_embedding(embedding,name) 
 
-def save_face(emb,name):
-    
-    """
-    function to save face
-    """
-    save_embedding(emb,name)
 
 def identify(known_embedding):
     """
@@ -170,9 +170,8 @@ def recognise():
         n=0
         # reducing frame size to speed up face detection
         small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-        s=time.time()
         faces = detector.detect_faces(small_frame)
-        print(time.time()-s)
+        
         if len(faces)==0:
             img = cv2.putText(frame,"no face", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 
                    1, (0,255,0),2, cv2.LINE_AA)
@@ -192,8 +191,39 @@ def recognise():
             img = cv2.putText(frame,"NOT ALLOWED", (x1*4,y1*4), cv2.FONT_HERSHEY_SIMPLEX, 
                    1, (0,255,0),2, cv2.LINE_AA)
         cv2.imshow("face recognition",img)
-        
     capture.release()
     cv2.destroyAllWindows()
 
-recognise()
+def capture():
+    capture = cv2.VideoCapture(0)
+    q = False
+    emb = None
+    while True:
+        ok, frame = capture.read()
+        if not ok:
+            break
+        
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            q = False
+            break
+        img = frame
+        small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+        faces = detector.detect_faces(small_frame)
+        if len(faces)==0:
+            img = cv2.putText(frame,"no face", (50,50), cv2.FONT_HERSHEY_SIMPLEX, 
+                   1, (0,255,0),2, cv2.LINE_AA)
+            cv2.imshow("Press q to quit",img)
+            continue
+        # selecting largest of all faces only
+        x1,y1,x2,y2 = get_largest_face(faces)
+        #enclosing face in a rectangle
+        img = cv2.rectangle(img,(x1*4,y1*4),(x2*4,y2*4),(0,255,0),2)
+        face = small_frame[y1:y2, x1:x2]
+        emb = get_embedding([face])[0] #finding embedding of face
+        cv2.imshow("Press c to capture", img)
+        if cv2.waitKey(1) & 0xFF == ord('c'):
+            q = True
+            break
+    capture.release()
+    cv2.destroyAllWindows()
+    return q,emb
