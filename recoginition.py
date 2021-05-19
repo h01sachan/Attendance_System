@@ -6,6 +6,7 @@ from keras_vggface.vggface import VGGFace
 from keras_vggface.utils import preprocess_input
 from matplotlib import pyplot
 from scipy.spatial.distance import cosine
+import attendance_writer as at
 
 #MTCNN used as a detector
 detector = MTCNN(scale_factor=0.65,min_face_size=30)
@@ -154,6 +155,7 @@ def is_match(known_embedding, candidate_embedding, thresh=0.5):
 
 #Function used to detect the faces and recoginize them
 def recognise():
+    attendance = at.Attendance()
     capture = cv2.VideoCapture(0)
     n=0
     while True:
@@ -187,6 +189,7 @@ def recognise():
         if found:
             img = cv2.putText(frame,f"Welcome {id}", (x1*4,y1*4), cv2.FONT_HERSHEY_SIMPLEX, 
                    1, (0,255,0),2, cv2.LINE_AA)
+            attendance.write_attendence(id)
         else:
             img = cv2.putText(frame,"NOT ALLOWED", (x1*4,y1*4), cv2.FONT_HERSHEY_SIMPLEX, 
                    1, (0,255,0),2, cv2.LINE_AA)

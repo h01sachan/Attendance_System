@@ -12,11 +12,13 @@ def print_time():
     datetime_label.after(1000, print_time)
 
 def attendence():
-    Thread(target=recognise).start()
+    # Thread(target=recognise).start()
+    recognise()
     return
 def save_image(event):
     name_entry.unbind("<Return>")
-    Thread(target=lambda: save_from_file(dir_path.get(),str(name.get()))).start()
+    # Thread(target=lambda: save_from_file(dir_path.get(),str(name.get()))).start()
+    save_from_file(dir_path.get(),str(name.get()))
     name_entry.delete(0,tk.END)
     name_entry.grid_remove()
     name_label.grid_remove()
